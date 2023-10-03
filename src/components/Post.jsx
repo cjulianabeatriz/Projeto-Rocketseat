@@ -1,6 +1,7 @@
 import styles from './Post.module.css';
 import perfil from '../assets/perfil.jpg';
 import { Comment } from './Comment';
+import { useState } from 'react';
 
 export function Post({ author, publishedAt, content }) {
 
@@ -11,16 +12,33 @@ export function Post({ author, publishedAt, content }) {
         minute: '2-digit'
     }).format(publishedAt);
 
-    const comments = [
-        1,
-        2,
-    ];
+    const [comments, setComments] = useState(['Post'])
 
-    function handleCreateNewComment(){
+    const [newCommentText, setNewCommentText] = useState('')
+
+    function handleCreateNewComment(event) {
         event.preventDefault()
-        comments.push(3)
-        console.log(comments)
+        setComments([...comments, newCommentText]);
+        setNewCommentText('');
     }
+
+    function handleNewCommentChange(event) {
+        event.target.setCustomValidity('');
+        setNewCommentText(event.target.value);
+    }
+
+    function handleNewCommentInvalid (event) {
+        event.target.setCustomValidity('Esse campo é obrigatório');
+    }
+
+    function deleteComment (commentToDelete) {
+        const commentsWithoutDeletedOne = comments.filter(comment => {
+            return comment !== commentToDelete;
+        })
+        setComments(commentsWithoutDeletedOne);
+    }
+
+    const isNewCommentEmpty = newCommentText.length === 0;
 
     return (
         <article className={styles.post}>
@@ -38,9 +56,9 @@ export function Post({ author, publishedAt, content }) {
             <div className={styles.content}>
                 {content.map(item => {
                     if (item.type === 'paragraph') {
-                        return <p>{item.content}</p>
+                        return <p key={item.content}>{item.content}</p>
                     } else if (item.type === 'link') {
-                        return <p><a href="#">{item.content}</a></p>
+                        return <p key={item.content}><a href="#">{item.content}</a></p>
                     }
                 })}
             </div>
@@ -48,14 +66,22 @@ export function Post({ author, publishedAt, content }) {
             <form onSubmit={handleCreateNewComment} className={styles.comment}>
                 <strong>Deixe seu feedback</strong>
                 <textarea
+                    onChange={handleNewCommentChange}
+                    name='input'
+                    value={newCommentText}
                     placeholder='Escreva seu comentário...'
+                    onInvalid={handleNewCommentInvalid}
+                    required
                 />
-                <button type='submit'>Comentar</button>
+                <button type='submit' disabled={isNewCommentEmpty}>Comentar</button>
             </form>
 
             <div className={styles.commentList}>
                 {comments.map(comment => {
-                    return <Comment />
+                    return <Comment 
+                    key={comment} 
+                    content={comment} 
+                    onDeleteComment={deleteComment}/>
                 })}
             </div>
 
